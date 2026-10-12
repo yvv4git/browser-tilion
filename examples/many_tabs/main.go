@@ -23,7 +23,7 @@ func main() {
 
 	tabs := []string{
 		"https://www.wikipedia.org",
-		"https://golang.org",
+		"https://github.com",
 		"https://example.com",
 	}
 
