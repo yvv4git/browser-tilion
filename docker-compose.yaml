@@ -1,0 +1,26 @@
+name: browser-tilion
+
+services:
+  tilion:
+    build:
+      context: .
+      dockerfile: docker/tilion/Dockerfile
+      args:
+        TILION_ENGINE_IMAGE: ${TILION_ENGINE_IMAGE:-tilion/fortress:latest}
+        TILION_EXTRAS: ${TILION_EXTRAS:-mcp,vision}
+    image: ${TILION_IMAGE:-browser-tilion}:${TILION_TAG:-latest}
+    ports:
+      - "${TILION_PORT:-9222}:9222"
+    environment:
+      TILION_PORT: ${TILION_PORT:-9222}
+      TILION_CDP_URL: ${TILION_CDP_URL:-http://tilion:9222}
+      TILION_API_KEY: ${TILION_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CAPTCHA_API_KEY: ${CAPTCHA_API_KEY:-}
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
