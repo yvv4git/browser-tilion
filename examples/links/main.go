@@ -40,7 +40,7 @@ func main() {
 	browser := cdp.Connect(*addr)
 
 	page := browser.MustPage(*baseURL).MustWaitLoad()
-	defer page.MustClose()
+	defer func() { _ = page.Close() }()
 
 	if err := page.WaitStable(3 * time.Second); err != nil {
 		log.Fatal(err)

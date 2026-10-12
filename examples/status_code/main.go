@@ -38,7 +38,7 @@ func main() {
 
 func checkURL(browser *rod.Browser, target string) {
 	page := browser.MustPage("")
-	defer page.MustClose()
+	defer func() { _ = page.Close() }()
 
 	router := page.HijackRequests()
 	defer router.Stop()

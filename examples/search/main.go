@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/utils"
 
 	"github.com/yvv4git/browser-tilion/examples/internal/cdp"
@@ -27,7 +26,7 @@ func main() {
 	browser := cdp.Connect(*addr)
 
 	page := browser.MustPage("https://www.wikipedia.org").MustWaitLoad()
-	defer page.MustClose()
+	defer func() { _ = page.Close() }()
 
 	searchInput := page.MustWaitStable().MustElement("#searchInput")
 	searchInput.MustInput(*query)
@@ -36,16 +35,19 @@ func main() {
 
 	fmt.Printf("article: %s\n", page.MustElement("#firstHeading").MustText())
 
-	err := rod.Try(func() {
-		img := page.MustWaitStable().MustElement("#mw-content-text img")
-		data := img.MustResource()
-		if err := utils.OutputFile(*output, data); err != nil {
-			log.Printf("save: %v", err)
-		} else {
-			log.Printf("article image saved: %s", *output)
-		}
-	})
+	img, err := page.Element("#mw-content-text img")
 	if err != nil {
 		log.Printf("image: %v", err)
+		return
 	}
+	data, err := img.Resource()
+	if err != nil {
+		log.Printf("resource: %v", err)
+		return
+	}
+	if err := utils.OutputFile(*output, data); err != nil {
+		log.Printf("save: %v", err)
+		return
+	}
+	log.Printf("article image saved: %s", *output)
 }

@@ -26,7 +26,7 @@ func main() {
 	browser := cdp.Connect(*addr)
 
 	page := browser.MustPage(*pageURL).MustWaitLoad()
-	defer page.MustClose()
+	defer func() { _ = page.Close() }()
 
 	page.MustWaitStable()
 
