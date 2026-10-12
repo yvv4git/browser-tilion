@@ -25,8 +25,9 @@ import (
 )
 
 const (
-	stableWindow         = 500 * time.Millisecond
-	readyStatePollingGap = time.Second
+	stableWindow          = 500 * time.Millisecond
+	readyStatePollingGap  = time.Second
+	readyStateEvalTimeout = 5 * time.Second
 )
 
 type pendingRequest struct {
@@ -167,9 +168,9 @@ func watchReadyState(page *rod.Page, start time.Time, timeout time.Duration) {
 }
 
 func readyState(page *rod.Page) string {
-	result, err := page.Eval(`() => document.readyState`)
+	result, err := page.Timeout(readyStateEvalTimeout).Eval(`() => document.readyState`)
 	if err != nil {
-		return "error: " + err.Error()
+		return "eval-timeout: " + err.Error()
 	}
 
 	return result.Value.Str()
@@ -202,7 +203,9 @@ func printInfo(page *rod.Page) {
 	fmt.Printf("title: %s\n", info.Title)
 	fmt.Printf("url:   %s\n", info.URL)
 
-	html, err := page.HTML()
+	printVideoState(page)
+
+	html, err := page.Timeout(readyStateEvalTimeout).HTML()
 	if err != nil {
 		log.Printf("html: %v", err)
 		return
@@ -210,8 +213,31 @@ func printInfo(page *rod.Page) {
 	fmt.Printf("html:  %d bytes\n", len(html))
 }
 
+func printVideoState(page *rod.Page) {
+	result, err := page.Timeout(readyStateEvalTimeout).Eval(`() => Array.from(document.querySelectorAll("video")).map(v => ({
+		paused: v.paused,
+		currentTime: v.currentTime,
+		readyState: v.readyState,
+		networkState: v.networkState,
+		src: (v.currentSrc || v.src || "").slice(0, 120)
+	}))`)
+	if err != nil {
+		log.Printf("video state: %v", err)
+		return
+	}
+
+	videos := result.Value.Arr()
+	fmt.Printf("video elements: %d\n", len(videos))
+	for index, video := range videos {
+		fmt.Printf("  [%d] paused=%v currentTime=%.1f readyState=%d networkState=%d src=%s\n",
+			index, video.Get("paused").Bool(), video.Get("currentTime").Num(),
+			video.Get("readyState").Int(), video.Get("networkState").Int(),
+			video.Get("src").Str())
+	}
+}
+
 func saveScreenshot(page *rod.Page, output string) {
-	data, err := page.Screenshot(false, nil)
+	data, err := page.Timeout(readyStateEvalTimeout).Screenshot(false, nil)
 	if err != nil {
 		log.Printf("screenshot: %v", err)
 		return
