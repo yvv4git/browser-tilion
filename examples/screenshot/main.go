@@ -25,10 +25,8 @@ func main() {
 
 	browser := cdp.Connect(*addr)
 
-	page := browser.MustPage(*pageURL).MustWaitLoad()
+	page := cdp.Open(browser, *pageURL)
 	defer func() { _ = page.Close() }()
-
-	page.MustWaitStable()
 
 	var (
 		data []byte

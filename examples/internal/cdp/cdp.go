@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-rod/rod"
 )
@@ -25,6 +26,25 @@ func Connect(addr string) *rod.Browser {
 		}
 	}
 	return rod.New().ControlURL(wsURL).MustConnect()
+}
+
+// Open creates a new tab, navigates it to url and waits until the page is no
+// longer loading. It does not wait for the window "load" event: on some sites
+// (go.dev, google.com, golang.org) a hanging third-party request prevents that
+// event from ever firing, which would block forever.
+func Open(b *rod.Browser, url string) *rod.Page {
+	page := b.MustPage("")
+	page.MustNavigate(url)
+	WaitReady(page)
+	return page
+}
+
+// WaitReady waits until the page document leaves the "loading" state, bounded
+// by a timeout, and ignores the error so a slow third-party request cannot
+// hang the program.
+func WaitReady(page *rod.Page) {
+	ready := rod.Eval(`() => document.readyState !== "loading"`)
+	_ = page.Timeout(20 * time.Second).Wait(ready)
 }
 
 func resolveWSURL(addr string) (string, error) {

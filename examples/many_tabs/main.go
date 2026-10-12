@@ -29,7 +29,7 @@ func main() {
 
 	var pages []*rod.Page
 	for _, target := range tabs {
-		page := browser.MustPage(target).MustWaitLoad()
+		page := cdp.Open(browser, target)
 		pages = append(pages, page)
 		fmt.Printf("opened: %s\n", page.MustInfo().Title)
 	}

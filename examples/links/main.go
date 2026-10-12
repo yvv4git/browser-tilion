@@ -14,7 +14,6 @@ import (
 	"net/url"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/yvv4git/browser-tilion/examples/internal/cdp"
 )
@@ -39,12 +38,8 @@ func main() {
 
 	browser := cdp.Connect(*addr)
 
-	page := browser.MustPage(*baseURL).MustWaitLoad()
+	page := cdp.Open(browser, *baseURL)
 	defer func() { _ = page.Close() }()
-
-	if err := page.WaitStable(3 * time.Second); err != nil {
-		log.Fatal(err)
-	}
 
 	links, err := page.Elements("a")
 	if err != nil {

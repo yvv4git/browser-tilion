@@ -25,13 +25,13 @@ func main() {
 
 	browser := cdp.Connect(*addr)
 
-	page := browser.MustPage("https://www.wikipedia.org").MustWaitLoad()
+	page := cdp.Open(browser, "https://www.wikipedia.org")
 	defer func() { _ = page.Close() }()
 
-	searchInput := page.MustWaitStable().MustElement("#searchInput")
+	searchInput := page.MustElement("#searchInput")
 	searchInput.MustInput(*query)
 	page.MustElement("#search-form > fieldset > button").MustClick()
-	page.MustWaitLoad().MustWaitStable()
+	cdp.WaitReady(page)
 
 	fmt.Printf("article: %s\n", page.MustElement("#firstHeading").MustText())
 

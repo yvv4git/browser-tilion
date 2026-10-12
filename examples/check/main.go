@@ -29,10 +29,8 @@ func main() {
 
 	browser := cdp.Connect(*addr)
 
-	page := browser.MustPage(target).MustWaitLoad()
+	page := cdp.Open(browser, target)
 	defer func() { _ = page.Close() }()
-
-	page.MustWaitStable()
 
 	info := page.MustInfo()
 	fmt.Printf("title: %s\n", info.Title)
