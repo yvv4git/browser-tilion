@@ -32,3 +32,6 @@ go.work.sum
 # .idea/
 # .vscode/
 dev/
+
+# Screenshots from examples
+examples/.screenshots/
